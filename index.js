@@ -1,86 +1,109 @@
 var inquirer = require("inquirer");
 
-// Array of possible answers
+function WordGuessGame() {
+  this.words = ['Rolling Stones', 'Led Zeppelin', 'The Beatles', 'Jimi Hendrix', 'Fleetwood Mac', 'Depeche Mode', 'The Cure', 'Nirvana', 'Metallica', 'Kraftwerk', 'The Pixies'];
+  this.gameWords = [];
 
-// Game object
+  this.numTurns = 10;
+  this.guessedLetters = [];
 
-var Game = function () {
-  var victory = false;
+  var startGame = function() {
+    this.numTurns = 10;
+    this.guessedLetters = [];
+    this.gameWords = [];
 
-  var words = ['Rolling Stones', 'Led Zeppelin', 'The Beatles', 'Jimi Hendrix', 'Fleetwood Mac', 'Depeche Mode', 'The Cure', 'Nirvana', 'Metallica', 'Kraftwerk', 'The Pixies'];
-  var gameWords = [];
-
-  var numTurns = 10;
-  var guessedLetters = [];
-
-  function startGame() {
-    var index = Math.floor((Math.random() * words.length));
-    gameWords.push(words[index]);
+    var index = Math.floor((Math.random() * this.words.length));
+    this.gameWords.push(this.words[index]);
+    console.log(this.gameWords);
 
     var blankedWord = "";
 
-    for (var i = 0; i < gameWords[0].length; i++) {
-      if (gameWords[0][i].toLowerCase() === String.match(/[a-z]/i)) {
+    for (var i = 0; i < this.gameWords[0].length; i++) {
+      if (this.gameWords[0][i].toLowerCase().match(/[a-z]/i)) {
         blankedWord += "_";
       }
       else {
-        blankedWord += gameWords[0][i];
+        blankedWord += this.gameWords[0][i];
       }
     }
+    console.log(blankedWord);
 
-    gameWords.push(blankedWord);
+    this.gameWords.push(blankedWord);
+    console.log(this.gameWords);
+    this.guessLetter();
   }
 
-  function guessLetter() {
+  this.guessLetter = function() {
+    console.log(this.guessedLetters);
     var index = 0;
+    console.log(this.gameWords[1]);
+
+    if (this.numTurns === 0){
+      console.log("I'm sorry, you ran out of turns...");
+      console.log("The Word Was: ", this.gameWords[0]);
+      this.repeatGame();
+    }
 
     inquirer
       .prompt([
         {
           name: "letter",
-          message: "What letter would you like to guess?",
-          validate: function (letter) {
-            // Declare function as asynchronous, and save the done callback
-            var done = this.async();
-
-            // Do async stuff
-            setTimeout(function () {
-              if (index.length != 1) {
-                // Pass the return value in the done callback
-                done('Please guess one and only one letter.');
-                return;
-              }
-              // Pass the return value in the done callback
-              done(null, true);
-            }, 1000);
-          }
+          message: "What letter would you like to guess?"
         }
       ])
-      .then(function (letter) {
-        guessedLetters.push(letter);
+      .then(function (response) {
 
-        if (guessedLetters.indexOf(letter) != -1) {
+        if (this.guessedLetters && this.guessedLetters.indexOf(letter) != -1) {
           console.log("You've already guessed that... guess again...");
         }
         else {
-          index = gameWords[0].indexOf(letter);
+          this.numTurns--;
+          this.guessedLetters.push(response.letter);
+
+          index = this.gameWords[0].indexOf(response.letter);
           while (index != -1) {
-            blankedWord[index] = gameWords[0][index];
-            index = gameWords[0].indexOf(letter, index);
+            this.gameWords[1][index] = this.gameWords[0][index];
+            index = this.gameWords[0].indexOf(response.letter, index);
           }
+        }
+        if (checkVictory()){
+          console.log("You got it in ", 10 - this.numTurns, " turns!");
+          console.log("The word was: ", this.gameWords[0]);
+          repeatGame();
+        }
+        else {
+          this.guessLetter();
         }
       });
   }
 
-  function checkVictory() {
-
+  this.checkVictory = function() {
+    if (this.gameWords[1].indexOf("_") === -1){
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 
-  function convertWord(word) {
-
-  }
-
-  function repeatGame(response) {
-
+  this.repeatGame = function() {
+    inquirer
+    .prompt([
+      {
+        name: "repeat",
+        message: "Would you like to play again?",
+        type: "list",
+        choices: ["Yes", "No"]
+      }
+    ])
+    .then(function(answer){
+      if (answer.repeat === "Yes"){
+        this.startGame();
+      }
+    })
   }
 }
+
+var game = new WordGuessGame();
+
+game.startGame();
